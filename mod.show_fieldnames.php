@@ -45,10 +45,31 @@ class Show_fieldnames {
    */ 
   function get_fieldnames() {
     $postdata = file_get_contents("php://input");
-    echo $postdata;
-    exit();
+    $data = explode(",", $postdata);
+    $ids = [];
+    foreach ($data as $field) {
+      $e = explode("_", $field);
+      if (count($e) !== 3) {
+        continue;
+      }
+      if (!is_numeric($e[2])) {
+        continue;
+      }
+      $ids[$e[2]] = $field;
+    }
 
-    return true;
+    $result = ee()->db->select('field_id, field_name')
+      ->from('channel_fields')
+      ->where_in('field_id', array_keys($ids))
+      ->get()->result();
+
+    $return_data = array();
+    foreach ($result as $row) {
+      $return_data['hold_field_' . $row->field_id] = $row->field_name;
+    }
+
+    echo json_encode($return_data);
+    exit();
   }
 
 }

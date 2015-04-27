@@ -21,6 +21,7 @@ class Show_fieldnames_ext {
   public $settings = array();
   public $name = SHOW_FIELDNAMES_NAME;
   public $version = SHOW_FIELDNAMES_VERSION;
+  public $class = SHOW_FIELDNAMES_CLASS;
   public $description = 'Reveal fieldnames on content entry pages.';
   public $settings_exist = 'n';
   public $docs_url = '';
@@ -89,10 +90,14 @@ class Show_fieldnames_ext {
     $js = ee()->extensions->last_call;
 
     // get action ID and POST URL
-    $action_id  = ee()->cp->fetch_action_id(SHOW_FIELDNAMES_CLASS, 'get_fieldnames');
-    $url = ee()->functions->fetch_site_index(false, false).QUERY_MARKER."ACT=".$action_id;
+    $result  = ee()->db->select('action_id')
+      ->from('actions')
+      ->where('class', $this->class)
+      ->where('method', 'get_fieldnames')
+      ->get()->row();
+    $url = ee()->functions->fetch_site_index(false, false) . QUERY_MARKER . "ACT=" . $result->action_id;
 
-    $tmp = file_get_contents('injected_cp.js');
+    $tmp = file_get_contents(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'injected_cp.js');
     $js .= "(function($) { var act_url = '" . $url . "';" . $tmp . "})(jQuery);";
     return $js;
   }
